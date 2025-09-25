@@ -7,7 +7,7 @@ import plotly.express as px
 from datetime import datetime
 import time
 
-# FIX: Add the project root to Python path   jhgvgvytgvugvhj
+# FIX: Add the project root to Python path
 current_file_path = Path(__file__).resolve()
 project_root = current_file_path.parent.parent
 sys.path.insert(0, str(project_root))
@@ -86,53 +86,163 @@ def main():
     st.title("📧 Mail Management AI - Multi Agent System")
     st.markdown("---")
     
-    # Sidebar for configuration
-    st.sidebar.header("Configuration")
+    # Fetch and process emails - MOVED AFTER MAIN TITLE
+    st.header("📥 Email Management")
+    email_col1, email_col2 = st.columns([2, 1])
     
-    # Check if environment variables are set
-    if not Config.GEMINI_API_KEY or not Config.EMAIL_ADDRESS:
-        st.sidebar.error("⚠️ Please set GEMINI_API_KEY and EMAIL_ADDRESS in your environment variables")
-        st.info("""
-        **Setup Instructions:**
-        1. Create a `.env` file in the project root
-        2. Add your credentials:
-           ```
-           GEMINI_API_KEY="your_api_key"
-           EMAIL_ADDRESS="your_email"
-           EMAIL_PASSWORD="your_app_password" # For Gmail, enable 2FA and use an App Password
-           ```
-        3. For Gmail, enable 2FA and use an App Password
-        """)
-        return
-
-    # Test backend connection
-    if st.sidebar.button("Test Backend Connection"):
-        try:
-            test_system = MailManagementSystem()
-            st.success("✅ Backend system initialized successfully!")
-        except Exception as e:
-            st.error(f"❌ Backend initialization failed: {e}")
+    with email_col1:
+        st.write("**Configure your email settings and fetch messages**")
+        
+    with email_col2:
+        email_limit = st.selectbox("Emails to fetch", [5, 10, 15, 20, 25, 30], index=1)
     
-    # Configuration options
-    st.sidebar.subheader("Settings")
-    # Email limit selector
-    email_limit = st.sidebar.slider("Number of emails to fetch", 5, 50, 10)
-    # Debug options
-    st.session_state.debug_mode = st.sidebar.checkbox("🛠️ Debug Mode", value=False)
-    if st.session_state.debug_mode:
-        st.sidebar.subheader("Debug Tools")
-        if st.sidebar.button("Test All Agents"):
-            test_all_agents()
-        if st.sidebar.button("Clear Session"):
-            clear_session()
-    # Fetch and process emails
-    if st.sidebar.button("🔄 Fetch & Process Emails", use_container_width=True, type="primary"):
+    if st.button("🔄 Fetch & Process Emails", use_container_width=True, type="primary"):
         fetch_and_process_emails(email_limit)
-    # Main content area
+    
+    st.markdown("---")
+    
+    # Sidebar for configuration - PROFESSIONAL REDESIGN
+    with st.sidebar:
+        st.header("⚙️ Control Panel")
+        
+        # Theme Selection Section
+        st.subheader("🎨 Theme Settings")
+        theme_options = {
+            "Default": "Professional blue theme",
+            "Dark": "Dark mode for reduced eye strain",
+            "Neon": "Vibrant neon theme for enhanced visibility"
+        }
+        selected_theme = st.selectbox(
+            "Interface Theme",
+            options=list(theme_options.keys()),
+            index=0,
+            help="Choose your preferred interface theme"
+        )
+        
+        # Apply theme selection
+        if selected_theme == "Neon":
+            st.success("🔮 Neon theme activated")
+            # Add neon CSS injection here
+            inject_neon_theme()
+        elif selected_theme == "Dark":
+            st.info("🌙 Dark theme enabled")
+            inject_dark_theme()
+        else:
+            st.success("🔵 Default theme active")
+        
+        st.markdown("---")
+        
+        # System Status Section
+        st.subheader("📊 System Status")
+        
+        # Connection status
+        if Config.GEMINI_API_KEY and Config.EMAIL_ADDRESS:
+            st.success("✅ Credentials Configured")
+            col_status1, col_status2 = st.columns(2)
+            with col_status1:
+                st.metric("API Status", "Active" if Config.GEMINI_API_KEY else "Inactive")
+            with col_status2:
+                st.metric("Email Status", "Connected" if Config.EMAIL_ADDRESS else "Disconnected")
+        else:
+            st.error("❌ Configuration Required")
+            st.info("Set environment variables in .env file")
+        
+        st.markdown("---")
+        
+        # Advanced Settings Section
+        st.subheader("🔧 Advanced Settings")
+        
+        # Debug mode toggle
+        debug_col1, debug_col2 = st.columns([2, 1])
+        with debug_col1:
+            st.session_state.debug_mode = st.checkbox("Developer Mode", value=False)
+        with debug_col2:
+            if st.session_state.debug_mode:
+                st.success("🛠️ ON")
+            else:
+                st.info("🔒 OFF")
+        
+        # Performance settings
+        st.selectbox(
+            "Processing Speed",
+            ["Balanced", "Fast", "Thorough"],
+            index=0,
+            help="Adjust processing speed based on your needs"
+        )
+        
+        # Data management
+        with st.expander("Data Management"):
+            st.button("Clear Cache", use_container_width=True)
+            st.button("Export Data", use_container_width=True)
+            st.button("System Diagnostics", use_container_width=True)
+        
+        st.markdown("---")
+        
+        # Quick Actions Section
+        st.subheader("⚡ Quick Actions")
+        
+        if st.session_state.processed_data:
+            action_col1, action_col2 = st.columns(2)
+            with action_col1:
+                if st.button("🔄 Refresh", use_container_width=True):
+                    fetch_and_process_emails(email_limit)
+            with action_col2:
+                if st.button("📊 Analytics", use_container_width=True):
+                    st.rerun()
+        else:
+            st.info("Fetch emails to enable quick actions")
+        
+        # System information
+        st.markdown("---")
+        st.caption(f"🕒 Last update: {datetime.now().strftime('%H:%M:%S')}")
+        st.caption("📧 Mail Management AI v1.0")
+
+    # Main content area remains the same
     if st.session_state.processed_data:
         display_dashboard()
     else:
         display_welcome()
+
+# Add theme injection functions
+def inject_neon_theme():
+    """Inject neon theme CSS"""
+    neon_css = """
+    <style>
+    .main-header {
+        color: #00ff00 !important;
+        text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00 !important;
+    }
+    .stButton>button {
+        border: 1px solid #ff00ff !important;
+        background: linear-gradient(45deg, #ff00ff, #00ffff) !important;
+        color: white !important;
+        text-shadow: 0 0 5px white !important;
+    }
+    .sidebar .sidebar-content {
+        background: linear-gradient(180deg, #0f0f23, #1a1a2e) !important;
+    }
+    </style>
+    """
+    st.markdown(neon_css, unsafe_allow_html=True)
+
+def inject_dark_theme():
+    """Inject dark theme CSS"""
+    dark_css = """
+    <style>
+    .main {
+        background-color: #1e1e1e !important;
+        color: #ffffff !important;
+    }
+    .sidebar .sidebar-content {
+        background-color: #2d2d2d !important;
+    }
+    .stButton>button {
+        background-color: #404040 !important;
+        color: white !important;
+    }
+    </style>
+    """
+    st.markdown(dark_css, unsafe_allow_html=True)
 
 def fetch_and_process_emails(limit):
     """Fetch and process emails with enhanced error handling"""
@@ -338,6 +448,11 @@ def display_enhanced_statistics(stats, category_stats, raw_emails):
                 st.write("**First Email Flags:**", raw_emails[0].get('flags', 'No flags'))
                 st.write("**Sample Email:**", {'subject': raw_emails[0].get('subject', 'No subject'), 'from': raw_emails[0].get('from', 'Unknown'), 'read': raw_emails[0].get('read', 'Unknown'), 'flags': raw_emails[0].get('flags', [])})
 
+import streamlit as st
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 def display_email_list_and_details(data):
     emails = data.get('emails', [])
     raw_emails = data.get('raw_emails', [])
@@ -354,14 +469,14 @@ def display_email_list_and_details(data):
             email_preview = f"{status_icon} **{email.get('subject', 'No subject')}** *From: {email.get('from', 'Unknown')}* 🏷️ {email.get('category', 'Unknown')}"
             with st.expander(email_preview, expanded=False):
                 st.write(f"**Date:** {email.get('date', 'Unknown')}")
-                st.write(f"**Status:** {'Read' if is_read else 'Unread'}")
+                st.write(f"**Status:** {'🟢Read' if is_read else '🟡Unread'}")
                 st.write(f"**Summary:** {email.get('summary', 'No summary')}")
                 col_btn1, col_btn2, col_btn3 = st.columns([1, 1, 1])
                 with col_btn1:
                     if st.button("📩 Open", key=f"select_{i}", use_container_width=True):
                         st.session_state.selected_email = i
                         st.session_state.chat_history = []
-                        st.experimental_rerun()
+                        # Removed st.experimental_rerun() to prevent full app re-render
                 with col_btn2:
                     if st.button("⏰ Remind", key=f"remind_{i}", use_container_width=True):
                         handle_quick_reminder(i)
@@ -369,16 +484,16 @@ def display_email_list_and_details(data):
                     if st.button("💬 Chat", key=f"chat_{i}", use_container_width=True):
                         st.session_state.selected_email = i
                         st.session_state.chat_history = []
-                        st.experimental_rerun()
+                        # Removed st.experimental_rerun() to prevent full app re-render
     with col2:
         if st.session_state.selected_email is not None:
             display_email_details(st.session_state.selected_email)
         else:
             st.info("## 👈 Select an Email to View Details")
 
-
 def handle_quick_reminder(email_index):
     """Handle quick reminder setting"""
+    logging.debug(f"Setting reminder for email index {email_index}")
     try:
         reminder = st.session_state.system.set_reminder_for_email(email_index)
         if reminder:
@@ -386,6 +501,7 @@ def handle_quick_reminder(email_index):
         else:
             st.info("🤖 No automatic reminder detected")
     except Exception as e:
+        logging.error(f"Reminder error: {e}")
         st.error(f"❌ Reminder setting failed: {e}")
 
 def display_email_selection_prompt():
@@ -449,7 +565,7 @@ def display_email_details(email_index):
     display_active_reminders()
 
 def display_reply_generator(email_index, email):
-    """Display reply generation interface"""
+    """Display reply generation interface with send functionality"""
     st.write("**AI-Powered Reply Generation**")
     col_tone, col_action = st.columns([2, 1])
     with col_tone:
@@ -466,18 +582,62 @@ def display_reply_generator(email_index, email):
                         st.error("❌ Reply generation failed. Check AI configuration.")
                 except Exception as e:
                     st.error(f"❌ Error generating reply: {e}")
+                    if st.session_state.debug_mode:
+                        st.exception(e)
+    
     if st.session_state.generated_reply:
         st.subheader("📝 Generated Reply")
-        st.text_area("Reply Content", st.session_state.generated_reply, height=200, key="reply_display")
-    col_copy, col_clear = st.columns(2)
-    with col_copy:
-        if st.button("📋 Copy to Clipboard"):
-            st.code(st.session_state.generated_reply)
-            st.success("✅ Reply copied!")
-    with col_clear:
-        if st.button("🗑️ Clear Reply"):
-            st.session_state.generated_reply = ""
-            st.rerun()
+        # Allow editing the reply
+        st.session_state.generated_reply = st.text_area(
+            "Reply Content",
+            st.session_state.generated_reply,
+            height=200,
+            key="reply_display"
+        )
+        
+        col_copy, col_send, col_clear = st.columns(3)
+        with col_copy:
+            if st.button("📋 Copy to Clipboard"):
+                st.code(st.session_state.generated_reply)
+                st.success("✅ Reply copied!")
+        with col_send:
+            if st.button("📤 Send Reply", use_container_width=True):
+                with st.spinner("📩 Sending email..."):
+                    try:
+                        # Extract recipient and original email details
+                        to_address = email.get('from', None)
+                        subject = f"Re: {email.get('subject', 'No subject')}"
+                        message_id = email.get('message_id', None)
+                        references = email.get('references', message_id)
+                        
+                        if not to_address:
+                            st.error("❌ No recipient email address found.")
+                            return
+                        
+                        # Send the email
+                        success = st.session_state.system.send_email(
+                            to_address=to_address,
+                            subject=subject,
+                            body=st.session_state.generated_reply,
+                            in_reply_to=message_id,
+                            references=references
+                        )
+                        
+                        if success:
+                            st.success("✅ Email sent successfully!")
+                            # Optionally clear the reply after sending
+                            st.session_state.generated_reply = ""
+                            st.rerun()
+                        else:
+                            st.error("❌ Failed to send email. Check your email configuration.")
+                    except Exception as e:
+                        st.error(f"❌ Error sending email: {e}")
+                        if st.session_state.debug_mode:
+                            st.exception(e)
+        with col_clear:
+            if st.button("🗑️ Clear Reply"):
+                st.session_state.generated_reply = ""
+                st.rerun()
 
 def display_reminder_setter(email_index, email):
     """Display reminder setting interface"""
@@ -508,8 +668,13 @@ def display_reminder_setter(email_index, email):
             if reminder:
                 st.success("✅ Custom reminder set successfully!")
                 st.rerun()
+            else:
+                st.error("❌ Failed to set reminder: No reminder returned.")
         except Exception as e:
             st.error(f"❌ Failed to set reminder: {e}")
+
+import time
+import logging
 
 def display_email_chat(email_index, email):
     """Display email chat interface"""
@@ -532,13 +697,21 @@ def display_email_chat(email_index, email):
     # Chat input
     user_message = st.text_input("Your question:", placeholder="e.g., What's the main action required? Summarize key points...", key="chat_input")
     if st.button("🚀 Send Message", use_container_width=True) and user_message:
-        with st.spinner("💭 AI is thinking..."):
-            try:
-                response, history = st.session_state.system.chat_about_email(email_index, user_message)
-                st.session_state.chat_history = history
-                st.rerun()
-            except Exception as e:
-                st.error(f"❌ Chat error: {e}")
+        current_time = time.time()
+        if current_time - st.session_state.last_chat_time > 1:  # 1-second debounce to prevent rapid fires
+            st.session_state.last_chat_time = current_time
+            with st.spinner("💭 AI is thinking..."):
+                try:
+                    response, history = st.session_state.system.chat_about_email(email_index, user_message)
+                    st.session_state.chat_history = history  # Update history
+                    st.session_state.chat_input = ""  # Clear the input field
+                    logging.debug(f"Chat processed for message: {user_message}")
+                    st.rerun()  # Refresh to show updated history
+                except Exception as e:
+                    st.error(f"❌ Chat error: {e}")
+                    logging.error(f"Chat error: {e}")
+        else:
+            st.warning("⏳ Please wait a moment before sending another message.")
 
 def display_email_analysis(email_index, categorized_email, email):
     """Display email analysis tools"""
@@ -562,12 +735,21 @@ def display_email_analysis(email_index, categorized_email, email):
         if st.button("📊 Extract Key Points"):
             st.info("🔍 Key point extraction coming soon!")
 
-def display_active_reminders():
-    """Display active reminders"""
+def display_active_reminders(context="dashboard"):
+    """Display active reminders with context-specific widget keys"""
+    # Initialize a render counter in session state
+    if 'reminder_render_counter' not in st.session_state:
+        st.session_state.reminder_render_counter = 0
+    render_id = f"{st.session_state.reminder_render_counter}"
+    st.session_state.reminder_render_counter += 1
+
     reminders = st.session_state.system.get_reminders()
+    if st.session_state.debug_mode:
+        st.write("Debug: Reminder IDs:", [reminder.get('id', 'No ID') for reminder in reminders])
+        st.write(f"Debug: Context: {context}, Render ID: {render_id}")
     if reminders:
         st.subheader("⏰ Your Active Reminders")
-        for reminder in reminders:
+        for index, reminder in enumerate(reminders):
             is_completed = reminder.get('completed', False)
             status_icon = "✅" if is_completed else "⏳"
             status_text = "Completed" if is_completed else "Pending"
@@ -580,17 +762,21 @@ def display_active_reminders():
                     st.caption(f"📅 {reminder.get('date', 'No date')} | 📧 {reminder.get('email_subject', 'Unknown')}")
                 with col_action:
                     if not is_completed:
-                        if st.button("Mark Done", key=f"complete_{reminder.get('id', 0)}"):
-                            st.session_state.system.mark_reminder_completed(reminder.get('id', 0))
+                        # Use context, reminder ID, and render_id for unique key
+                        button_key = f"complete_{context}_{reminder.get('id', index)}_{render_id}"
+                        if st.session_state.debug_mode:
+                            st.write(f"Debug: Button key: {button_key}")
+                        if st.button("Mark Done", key=button_key):
+                            st.session_state.system.mark_reminder_completed(reminder.get('id', index))
                             st.rerun()
         # Management options
         col_manage1, col_manage2 = st.columns(2)
         with col_manage1:
-            if st.button("🗑️ Clear Completed"):
-                completed = [r for r in reminders if r.get('completed', False)]
-                st.info(f"Would clear {len(completed)} completed reminders")
+            if st.button("🗑️ Clear Completed", key=f"clear_completed_{context}_{render_id}"):
+                cleared_count = st.session_state.system.clear_completed_reminders()
+                st.info(f"Cleared {cleared_count} completed reminders")
         with col_manage2:
-            if st.button("📋 Export Reminders"):
+            if st.button("📋 Export Reminders", key=f"export_reminders_{context}_{render_id}"):
                 st.info("Export feature coming soon!")
     else:
         st.info("No reminders set yet.")

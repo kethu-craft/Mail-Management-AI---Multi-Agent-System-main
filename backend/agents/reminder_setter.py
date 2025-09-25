@@ -1,5 +1,6 @@
 import datetime
 import re
+import uuid  # Added for optional UUID-based IDs
 from backend.utils.gemini_client import GeminiClient
 
 class ReminderSetterAgent:
@@ -7,6 +8,8 @@ class ReminderSetterAgent:
         self.gemini = GeminiClient()
         self.reminders = []
         self.reminder_id_counter = 1
+        # Optional: Use UUIDs instead of counter for extra robustness
+        self.use_uuid = False  # Toggle to True if you prefer UUIDs
     
     def extract_reminder_info(self, email_content):
         """Extract reminder information from email content using AI"""
@@ -73,6 +76,7 @@ class ReminderSetterAgent:
             return None
             
         except Exception as e:
+            print(f"Error extracting reminder info: {e}")
             return None
     
     def set_reminder(self, email_content, custom_reminder=None):
@@ -87,7 +91,7 @@ class ReminderSetterAgent:
             
             # Create reminder
             reminder = {
-                'id': self.reminder_id_counter,
+                'id': str(uuid.uuid4()) if self.use_uuid else self.reminder_id_counter,
                 'email_subject': email_content.get('subject', 'No subject'),
                 'action': reminder_info.get('action', 'Follow up on email'),
                 'date': reminder_info.get('date', 'TOMORROW'),
@@ -95,16 +99,23 @@ class ReminderSetterAgent:
                 'completed': False
             }
             
-            self.reminder_id_counter += 1
+            if not self.use_uuid:
+                self.reminder_id_counter += 1
             self.reminders.append(reminder)
+            
+            # Debug: Log the reminder ID
+            print(f"Set reminder with ID: {reminder['id']}")
             
             return reminder
             
         except Exception as e:
+            print(f"Error setting reminder: {e}")
             return None
     
     def get_reminders(self):
         """Get all reminders"""
+        # Debug: Log all reminder IDs
+        print("Current reminder IDs:", [reminder['id'] for reminder in self.reminders])
         return self.reminders
     
     def mark_completed(self, reminder_id):
@@ -114,7 +125,22 @@ class ReminderSetterAgent:
                 if reminder['id'] == reminder_id:
                     reminder['completed'] = True
                     reminder['completed_at'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    print(f"Marked reminder {reminder_id} as completed")
                     return True
+            print(f"Reminder {reminder_id} not found")
             return False
         except Exception as e:
+            print(f"Error marking reminder completed: {e}")
             return False
+    
+    def clear_completed(self):
+        """Clear all completed reminders"""
+        try:
+            initial_count = len(self.reminders)
+            self.reminders = [r for r in self.reminders if not r.get('completed', False)]
+            cleared_count = initial_count - len(self.reminders)
+            print(f"Cleared {cleared_count} completed reminders")
+            return cleared_count
+        except Exception as e:
+            print(f"Error clearing completed reminders: {e}")
+            return 0    

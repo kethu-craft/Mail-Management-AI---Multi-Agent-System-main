@@ -4,6 +4,13 @@ from backend.agents.email_categorizer import EmailCategorizerAgent
 from backend.agents.reply_generator import ReplyGeneratorAgent
 from backend.agents.reminder_setter import ReminderSetterAgent
 from backend.agents.chatbot import ChatbotAgent  # New import
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import base64
+import smtplib
+from backend.config import Config
 
 class MailManagementSystem:
     def __init__(self):
@@ -13,6 +20,8 @@ class MailManagementSystem:
         self.categorizer = EmailCategorizerAgent()
         self.reply_generator = ReplyGeneratorAgent()
         self.reminder_setter = ReminderSetterAgent()
+        self.email_address = Config.EMAIL_ADDRESS
+        self.email_password = Config.EMAIL_PASSWORD
         self.chatbot = ChatbotAgent()  # New agent
         self.current_emails = []
         print("All agents initialized successfully!")
@@ -84,9 +93,59 @@ class MailManagementSystem:
     def mark_reminder_completed(self, reminder_id):
         return self.reminder_setter.mark_completed(reminder_id)
     
+    def clear_completed_reminders(self):
+        """Clear all completed reminders"""
+        return self.reminder_setter.clear_completed()
+    
     # New method for general chatbot (THIS WAS MISSING - NOW ADDED)
     def general_chat(self, message):
         # Provide stats context for local fallbacks in chatbot
         stats = self.fetcher.get_email_stats(self.current_emails) if self.current_emails else {}
         context = stats  # Pass as dict for parsing in chatbot
         return self.chatbot.general_chat(message, context)
+    
+    def send_email(self, to_address, subject, body, in_reply_to=None, references=None):
+        """
+        Send an email using SMTP.
+        
+        Args:
+            to_address (str): Recipient's email address
+            subject (str): Email subject
+            body (str): Email body content
+            in_reply_to (str, optional): Message-ID of the email being replied to
+            references (str, optional): References header for threading
+            
+        Returns:
+            bool: True if email sent successfully, False otherwise
+        """
+        try:
+            # Create the email message
+            msg = MIMEMultipart()
+            msg['From'] = self.email_address
+            msg['To'] = to_address
+            msg['Subject'] = subject
+            
+            # Add reply headers for threading
+            if in_reply_to:
+                msg['In-Reply-To'] = in_reply_to
+            if references:
+                msg['References'] = references
+            
+            # Attach the body
+            msg.attach(MIMEText(body, 'plain'))
+            
+            # Connect to SMTP server (example for Gmail)
+            smtp_server = 'smtp.gmail.com'
+            smtp_port = 587
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+            server.login(self.email_address, self.email_password)
+            
+            # Send the email
+            server.sendmail(self.email_address, to_address, msg.as_string())
+            server.quit()
+            
+            return True
+        except Exception as e:
+            print(f"Error sending email: {e}")
+            return False
