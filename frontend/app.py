@@ -27,7 +27,7 @@ except ImportError as e:
         sys.path.insert(0, backend_path)
         from main import MailManagementSystem
         from config import Config
-        print("✅ Backend imports successful with alternative path!")
+        print("✅ Backend imports successful with alternative path !")
     except ImportError as e2:
         print(f"❌ Alternative import also failed: {e2}")
         # Create dummy classes to prevent crashes
