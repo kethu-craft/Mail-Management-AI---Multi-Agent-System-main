@@ -4,11 +4,8 @@ from backend.agents.email_categorizer import EmailCategorizerAgent
 from backend.agents.reply_generator import ReplyGeneratorAgent
 from backend.agents.reminder_setter import ReminderSetterAgent
 from backend.agents.chatbot import ChatbotAgent  # New import
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import base64
 import smtplib
 from backend.config import Config
 
