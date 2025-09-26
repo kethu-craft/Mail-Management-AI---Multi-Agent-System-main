@@ -7,6 +7,7 @@ import plotly.express as px
 from datetime import datetime
 import time
 
+
 # FIX: Add the project root to Python path
 current_file_path = Path(__file__).resolve()
 project_root = current_file_path.parent.parent
