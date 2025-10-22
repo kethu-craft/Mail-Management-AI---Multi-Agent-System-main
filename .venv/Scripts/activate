@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\DELL\Downloads\Mail-Management-AI---Multi-Agent-System-main\Mail-Management-AI---Multi-Agent-System-main\.venv"
+VIRTUAL_ENV="C:\Users\DELL\Pictures\Mail Management Multi Agent AI\mail\.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

@@ -23,8 +23,7 @@ class ReminderSetterAgent:
             
             Email Subject: {subject}
             From: {sender}
-            Content: {body}
-            
+            Content: {body} 
             If this email requires action (like a meeting, task, deadline, or follow-up), 
             respond with:
             ACTION: [clear action description]

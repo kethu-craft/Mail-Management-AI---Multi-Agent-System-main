@@ -1,3 +1,5 @@
+# [file name]: requirements.txt
+# [file content begin]
 streamlit==1.28.0
 google-generativeai==0.8.3
 python-dotenv==1.0.0
@@ -5,5 +7,5 @@ imap-tools==1.0.0
 python-dateutil==2.8.2
 pandas==2.0.3
 plotly==5.15.0
- 
-
+# PyJWT removed - using custom token system
+# [file content end]

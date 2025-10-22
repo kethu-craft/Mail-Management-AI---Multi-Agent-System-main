@@ -1,14 +1,14 @@
+# [file name]: main.py
+# [file content begin]
 from backend.agents.email_fetcher import EmailFetcherAgent
 from backend.agents.email_summarizer import EmailSummarizerAgent
 from backend.agents.email_categorizer import EmailCategorizerAgent
 from backend.agents.reply_generator import ReplyGeneratorAgent
 from backend.agents.reminder_setter import ReminderSetterAgent
-from backend.agents.chatbot import ChatbotAgent  # New import
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
+from backend.agents.chatbot import ChatbotAgent
+from backend.auth import AuthSystem
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import base64
 import smtplib
 from backend.config import Config
 
@@ -22,10 +22,46 @@ class MailManagementSystem:
         self.reminder_setter = ReminderSetterAgent()
         self.email_address = Config.EMAIL_ADDRESS
         self.email_password = Config.EMAIL_PASSWORD
-        self.chatbot = ChatbotAgent()  # New agent
+        self.chatbot = ChatbotAgent()
         self.current_emails = []
+        self.auth_system = AuthSystem()
         print("All agents initialized successfully!")
     
+    # NEW: OTP Authentication methods
+    def initiate_registration(self, email):
+        """Initiate registration by sending OTP"""
+        return self.auth_system.initiate_registration(email)
+    
+    def verify_otp(self, email, otp):
+        """Verify OTP for registration"""
+        return self.auth_system.verify_otp(email, otp)
+    
+    def complete_registration(self, email, password):
+        """Complete registration after OTP verification"""
+        return self.auth_system.complete_registration(email, password)
+    
+    def resend_otp(self, email):
+        """Resend OTP to user"""
+        return self.auth_system.resend_otp(email)
+    
+    def login_user(self, email, password):
+        """Authenticate user"""
+        return self.auth_system.login_user(email, password)
+    
+    def verify_token(self, token):
+        """Verify JWT token"""
+        return self.auth_system.verify_token(token)
+    
+    def user_exists(self, email):
+        """Check if user exists"""
+        return self.auth_system.user_exists(email)
+
+    # NEW: Delete account method
+    def delete_account(self, email, password):
+        """Delete user account"""
+        return self.auth_system.delete_account(email, password)
+    
+    # ... (rest of your existing methods remain the same)
     def fetch_and_process_emails(self, limit=10):
         print(f"Fetching and processing {limit} emails...")
         try:
@@ -97,7 +133,6 @@ class MailManagementSystem:
         """Clear all completed reminders"""
         return self.reminder_setter.clear_completed()
     
-    # New method for general chatbot (THIS WAS MISSING - NOW ADDED)
     def general_chat(self, message):
         # Provide stats context for local fallbacks in chatbot
         stats = self.fetcher.get_email_stats(self.current_emails) if self.current_emails else {}
@@ -149,3 +184,4 @@ class MailManagementSystem:
         except Exception as e:
             print(f"Error sending email: {e}")
             return False
+# [file content end]
